@@ -37,7 +37,7 @@ public class RunDB{
 			}else if(strLine.contains("ROLLBACK")){
 				db.rollbackTransaction();
 			}else if(strLine.contains("END")){
-				
+				System.exit(0);
 			}else if(strLine.contains("NUMEQUALTO")){
 				String[] parameters = strLine.split(" ");
 				int number = db.numEqual(Integer.parseInt(parameters[1]));
