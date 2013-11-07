@@ -12,7 +12,7 @@ The project implements the in mempru database. It is used for managing the value
  
  input-files are:
  
- input1.txt
- input2.txt
- input3.txt
- input4.txt
+ test/input1.txt
+ test/input2.txt
+ test/input3.txt
+ test/input4.txt
