@@ -8,4 +8,11 @@ The project implements the in mempru database. It is used for managing the value
  
  Running the database
  
- java RunDB -i <input-file>
+ java RunDB -i input-file
+ 
+ input-files are:
+ 
+ input1.txt
+ input2.txt
+ input3.txt
+ input4.txt
