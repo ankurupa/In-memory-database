@@ -26,7 +26,7 @@ public class RunDB{
 				String[] parameters = strLine.split(" ");
 				Variable variable = db.get(parameters[1]);
 				if(variable != null)
-					System.out.println(variable.getValue());
+					System.out.println(variable.getFinalValue());
 				else
 					System.out.println("NULL");			
 			}else if(strLine.contains("SET") && !(strLine.contains("UNSET"))){

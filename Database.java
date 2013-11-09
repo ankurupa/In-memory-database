@@ -1,91 +1,127 @@
 /**
-* @File Name: AppVar.java
+* @File Name: Database.java
 * @Author: Ankur Upadhyay, Research Assistant, Computer Science Department, University at Buffalo.
 * The instance of the class is used to represent the session of dastabse
+* Method  details:
+ -----------------
+ * beginTransaction :- The method is used to begin the transaction. The time complexity of the method is O(1).
+ * rollbackTransaction :- The method is used to rollback the last live transaction. The time complexity of the method is O(n).
+ * set() :- The method is used to set the value of some particular. The time complexity of the method is O(1).
+ * get() :- The method is used to get the value of the variable. The time complxity of the method is O(1).
+ * commitTransaction() :- The method is used to commit all the live transactions in the database. The time complexity of the method is O(1).
+ * numEqual() :- The method is used to return the number of variables whose value is equal to particular number. The time complexity of the             method is O(n).
+ * unset () :- The method is used to unset the value of the variable. The time complexity of the method is O(1).
 **/
 
 import java.util.*;
 
 public class Database{
 
-	protected ArrayList<Variable> variables;
-	protected ArrayList<Integer> transactions;	
+	protected ArrayList<Variable> operationTracker; //tracker for the operations performed in the database session
+	protected ArrayList<Integer> transactionTracker; //tracker for all the live transactions in the database session.
+    protected HashMap<String, ArrayList<Integer>> variableTracker; //tracker for all the variables
+    protected int tracker; //tracker for tracking the last oepration performed in database session.
+
 	
 	public Database(){
-		this.variables = new ArrayList<Variable>();
-		this.transactions = new ArrayList<Integer>();
+		this.operationTracker = new ArrayList<Variable>();
+		this.transactionTracker = new ArrayList<Integer>();
+        this.variableTracker = new HashMap<String, ArrayList<Integer>>();
+        this.tracker = 0;
 	}
 
 	public void beginTransaction(){
-		this.transactions.add(this.variables.size());
+		this.transactionTracker.add(this.operationTracker.size());
 	}
 
 	public void rollbackTransaction(){
-		int start = this.transactions.get(this.transactions.size()-1);
-		int counter = this.variables.size()-1;
-		while(counter >= start){
-			this.variables.remove(counter);
-			counter--;
-		}
-		this.transactions.remove(this.transactions.size()-1);
+        if(this.transactionTracker.size() == 0){
+            System.out.println("NO TRANSACTION");
+        }else{
+            int last_transaction_start = this.transactionTracker.get(this.transactionTracker.size()-1);
+            Variable variable = null;
+            ArrayList<Integer> vIndexes = null;
+            int counter = this.tracker;
+            while(counter >= last_transaction_start){
+                variable = this.operationTracker.get(this.tracker);
+                vIndexes = this.variableTracker.get(variable.getName());
+                vIndexes.remove(vIndexes.size()-1);
+                this.variableTracker.put(variable.getName(), vIndexes);
+                this.operationTracker.remove(counter);
+                this.transactionTracker.remove(this.transactionTracker.size()-1);
+                counter--;
+            }
+            this.tracker = this.operationTracker.size()-1;
+        }
 	}
 
+    
 	public void set(String name, int value){
-		Variable variable = new Variable(name, value);
-		this.variables.add(variable);
+        ArrayList<Integer> vIndexes = this.variableTracker.get(name);
+        if(vIndexes == null || (vIndexes.size() == 0)){
+            //element is not present in the database
+            Variable new_variable = new Variable(name, 0, value);
+            this.operationTracker.add(new_variable);
+            this.tracker=this.operationTracker.size()-1;
+            vIndexes = new ArrayList<Integer>();
+            vIndexes.add(this.tracker);
+            this.variableTracker.put(name, vIndexes);
+        }else{
+            //element is alread present in the database
+            int last_index = vIndexes.get(vIndexes.size()-1);
+            Variable last_variable = this.operationTracker.get(last_index);
+            Variable new_variable = new Variable(name, last_variable.getFinalValue(), value);
+            this.operationTracker.add(new_variable);
+            this.tracker = this.operationTracker.size()-1;
+            vIndexes.add(this.tracker);
+            this.variableTracker.put(name, vIndexes);
+        }
 	}
 
 	public Variable get(String name){
-		if(this.variables.size() == 0)
-			return null;
-		int counter = this.variables.size()-1;
-		Variable variable = null;		
-		boolean found = false;		
-		while(counter >= 0){
-			variable = this.variables.get(counter);
-			if(variable.getName().equals(name))				
-				return variable;
-			counter--;
-		}
-		return null;
+		ArrayList<Integer> vIndexes = this.variableTracker.get(name);
+        if(vIndexes == null || (vIndexes.size() == 0)){
+            //element is not present in the database
+            return null;
+        }else{
+            Variable last_variable = this.operationTracker.get(vIndexes.get(vIndexes.size()-1));
+            return last_variable;
+        }
 	}
 	
-	public void commitTransaction(){}
+	public void commitTransaction(){
+        if(this.transactionTracker.size() == 0)
+            System.out.println("NO TRANSACTION");
+        else{
+            this.transactionTracker = new ArrayList<Integer>();
+        }
+    }
 
 	public int numEqual(int value){
-		Set<String> vars = new HashSet<String>();
-		int counter = this.variables.size()-1;
-		int number = 0;
-		Variable variable = null;		
-		while(counter >= 0){
-			variable = this.variables.get(counter);
-			if(!vars.contains(variable.getName())){
-				if(variable.getValue() == value)
-					number++;
-				vars.add(variable.getName());
-			}
-			counter--;	
-		}
-		return number;
+		int numberOfVars = 0;
+        ArrayList<Integer> vIndexes = null;
+        for(Map.Entry<String, ArrayList<Integer>> variable : this.variableTracker.entrySet()){
+            vIndexes = variable.getValue();
+            int last_index = vIndexes.get(vIndexes.size()-1);
+            int number = (this.operationTracker.get(last_index)).getFinalValue();
+            if(number == value)
+                numberOfVars++;
+        }
+        return numberOfVars;
 	}
 
 	public void unset(String name){
-		int number=0;
-		int counter = this.variables.size()-1;
-		Variable variable=null;		
-		while(counter >= 0){
-			variable=this.variables.get(counter);
-			if(variable.getName().equals(name))
-				number++;
-			if(number == 2) 
-				break;
-			counter--;	
-		}
-		Variable new_variable = null;
-		if(number == 2)
-			new_variable = new Variable(name, variable.getValue());
-		else
-			new_variable = new Variable(name, 0);
-		this.variables.add(new_variable);
+		ArrayList<Integer> vIndexes = this.variableTracker.get(name);
+        if(vIndexes == null || (vIndexes.size() == 0)){
+            System.out.println("The variable is not present in the database");
+        }else{
+            int last_index = vIndexes.get(vIndexes.size()-1);
+            Variable last_variable = this.operationTracker.get(last_index);
+            Variable new_variable = new Variable(name, last_variable.getFinalValue(), last_variable.getInitialValue());
+            this.operationTracker.add(new_variable);
+            this.tracker = this.operationTracker.size()-1;
+            vIndexes.add(this.tracker);
+            this.variableTracker.put(name, vIndexes);
+        }
 	}
 }

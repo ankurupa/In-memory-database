@@ -7,15 +7,19 @@
 public class Variable{
 
 	protected String name;
-	protected int value;
+	protected int initialValue;
+    protected int finalValue;
 
-	public Variable(String name, int value){
+	public Variable(String name, int initialValue, int finalValue){
 		this.name = name;
-		this.value = value;
+		this.initialValue = initialValue;
+        this.finalValue = finalValue;
 	}
 
-	public void setValue(int value){this.value=value;}
+	public void setInitialValue(int initialValue){this.initialValue=initialValue;}
 	public void setName(String name){this.name=name;}
-	public int getValue(){return this.value;}
+	public int getInitialValue(){return this.initialValue;}
 	public String getName(){return this.name;}
+    public void setFinalValue(int finalValue){this.finalValue = finalValue;}
+    public int getFinalValue(){return this.finalValue;}
 }
